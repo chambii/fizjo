@@ -4,33 +4,43 @@ import { useState } from "react";
 function Booking() {
   const [message, setMessage] = useState("");
 
-  const randomHours = [
-    "08:00",
-    "09:30",
-    "11:00",
-    "12:30",
-    "14:00",
-    "15:30",
-    "17:00",
-    "18:30",
-  ];
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const date = e.target.date.value;
+    const form = e.target;
 
-    const randomTime =
-      randomHours[
-        Math.floor(Math.random() * randomHours.length)
-      ];
+    const bookingData = {
+      name: form[0].value,
+      email: form[1].value,
+      phone: form[2].value,
+      date: form[3].value,
+      service: form[4].value,
+      message: form[5].value,
+    };
 
-    setMessage(
-      `✅ Rezerwacja udana!
-Termin: ${date} godz. ${randomTime}`
-    );
+    try {
+      const response = await fetch("http://localhost:5000/booking", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(bookingData),
+      });
 
-    e.target.reset();
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage(
+          `✅ Rezerwacja zapisana!`
+        );
+        form.reset();
+      } else {
+        setMessage("❌ Błąd zapisu");
+      }
+    } catch (error) {
+      console.log(error);
+      setMessage("❌ Błąd serwera");
+    }
   };
 
   return (
@@ -42,55 +52,29 @@ Termin: ${date} godz. ${randomTime}`
       <div className="booking-container">
         <h1>Umów wizytę</h1>
 
-        <form
-          className="booking-form"
-          onSubmit={handleSubmit}
-        >
-          <input
-            type="text"
-            placeholder="Imię i nazwisko"
-            required
-          />
+        <form className="booking-form" onSubmit={handleSubmit}>
+          <input type="text" placeholder="Imię i nazwisko" required />
 
-          <input
-            type="email"
-            placeholder="Email"
-            required
-          />
+          <input type="email" placeholder="Email" required />
 
-          <input
-            type="tel"
-            placeholder="Telefon"
-            required
-          />
+          <input type="tel" placeholder="Telefon" required />
 
-          <input
-            type="date"
-            name="date"
-            required
-          />
+          <input type="date" required />
 
-<select required>
-  <option value="">Wybierz usługę</option>
-
-  <option>Terapia manualna</option>
-  <option>Rehabilitacja</option>
-  <option>Masaż</option>
-  <option>Trener personalny</option>
-</select>
+          <select required>
+            <option value="">Wybierz usługę</option>
+            <option>Terapia manualna</option>
+            <option>Rehabilitacja</option>
+            <option>Masaż</option>
+            <option>Trener personalny</option>
+          </select>
 
           <textarea placeholder="Dodatkowe informacje"></textarea>
 
-          <button type="submit">
-            Potwierdź rezerwację
-          </button>
+          <button type="submit">Potwierdź rezerwację</button>
         </form>
 
-        {message && (
-          <div className="success-message">
-            {message}
-          </div>
-        )}
+        {message && <div className="success-message">{message}</div>}
       </div>
     </div>
   );
